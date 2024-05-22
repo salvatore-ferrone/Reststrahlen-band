@@ -9,9 +9,12 @@ import os
 
 class PathHandler:
     def __init__(self):
-        json_file="basepaths.json"
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        json_file = os.path.join(dir_path, "basepaths.json")
         with open(json_file, 'r') as f:
             self.basepaths = json.load(f)
+        self.wavenumbers= self.basepaths['wavenumbers']
 
     def build_path(self, base_path, *args):
         """
@@ -19,18 +22,17 @@ class PathHandler:
         """
         return os.path.join(base_path, *args)
 
-    def get_data(self, key):
-        """
-        Get data from the dictionary using the key.
-        """
-        return self.data.get(key)
+    def otes_csv(self, survey_name):
+        return self.build_path(self.basepaths["OTES_csv"], survey_name+"_data_spectra.csv")
 
-    def set_data(self, key, value):
-        """
-        Set a value in the dictionary using the key.
-        """
-        self.data[key] = value
-
+    def bayes_folder(self, survey_name):
+        directory=self.build_path(self.basepaths["bayes_fits"], survey_name)
+        os.makedirs(directory, exist_ok=True)
+        return directory
+    
+    def bayes_fits_fname(self, survey_name, row_index):
+        directory=self.bayes_folder(survey_name)
+        return self.build_path(directory+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5")
 
 # def obtain_file_paths(ii,shape_model="50K_palmer_v20"):
 #     # set up the paths

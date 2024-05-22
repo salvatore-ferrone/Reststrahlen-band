@@ -5,14 +5,12 @@ import h5py
 import perform_bayes_fit as PBF
 import sys 
 import datetime
+from path_handler import PathHandler
+import os 
 
 def set_parameters(wv_num_min=520,wv_num_max=1150,chain_length = 1000,chain_sample=250,n_chains=4):
     return wv_num_min, wv_num_max, chain_length,chain_sample,n_chains
 
-def get_paths(survey_name="EQ3"):
-    path_to_spectra="/scratch2/sferrone/OREX/OTES/"+survey_name+"_data_spectra.csv"
-    path_to_wave_numbers="/scratch2/sferrone/OREX/OTES/OTES_wnb.csv"
-    return path_to_spectra, path_to_wave_numbers
 
 def open_data(path_to_spectra,path_to_wave_numbers):
     spectra_csv = pd.read_csv(path_to_spectra)
@@ -31,6 +29,7 @@ def get_variable_names():
     return ["m","b","A_0","A_1","kbar_0","kbar_1","sigma_0","sigma_1"]
 
 def write_to_hdf5(
+    out_file_path,
     survey_name,
     row_index,
     outarray,
@@ -47,8 +46,8 @@ def write_to_hdf5(
     path_to_wave_numbers
     
 ):
-    outpath="/scratch2/sferrone/OREX/fits/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5"
-    with h5py.File(outpath,'w') as f:
+
+    with h5py.File(out_file_path,'w') as f:
         dset=f.create_dataset("chain",data=outarray)
         dset.attrs['variables']=variables
         dset.attrs['sclk']=sclk
@@ -67,11 +66,19 @@ def write_to_hdf5(
 
 def main(row_index,survey_name):
     
+    paths=PathHandler()
     start_time = datetime.datetime.now()
     wv_num_min, wv_num_max, chain_length,chain_sample,n_chains=\
         set_parameters()
-    path_to_spectra, path_to_wave_numbers=\
-        get_paths(survey_name)
+    path_to_spectra=paths.otes_csv(survey_name)
+    path_to_wave_numbers=paths.wavenumbers
+    out_file_name=paths.bayes_fits_fname(survey_name,row_index)
+    
+    # check if outfile alrady exists
+    if os.path.exists(out_file_name):
+        print("Skipping\n",out_file_name, "\n It already exists\nDelete if you wish recompute")
+        return
+    
     spectra_csv, wave_nb=\
         open_data(path_to_spectra,path_to_wave_numbers)
     wavenumber, spectra_filter=\
@@ -99,6 +106,7 @@ def main(row_index,survey_name):
         outarray[i,:]=trace_dict[sclk][variable_names[i]]
     
     write_to_hdf5(
+        out_file_name,
         survey_name,
         row_index,
         outarray,

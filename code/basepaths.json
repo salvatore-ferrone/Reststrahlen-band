@@ -1,5 +1,5 @@
 {   
     "OTES_csv": "/scratch2/sferrone/OREX/OTES/",
-    "spectral_fits": "/scratch2/sferrone/OREX/fits/",
+    "bayes_fits": "/scratch2/sferrone/OREX/bayes_fits/",
     "wavenumbers": "/scratch2/sferrone/OREX/OTES/OTES_wnb.csv"
 }
