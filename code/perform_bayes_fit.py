@@ -209,29 +209,7 @@ def store_trace_in_dict(sclk, variables, trace, chain_length, chain_sample, ncha
     return traces
 
 
-def save_trace_as_pkl(  trace, 
-                        sclk_row_index,
-                        survey_name,
-                        shape_model="50K_palmer_v20",
-                        basepath="../data-intermediate/spectral-fits/",):
-    """
-    Save the trace to a file.
-
-    Parameters:
-    - trace (pymc3.backends.base.MultiTrace): The trace to save.
-    - filename (str): The filename to save the trace to.
-    - shape_model (str, optional): The shape model to save. Defaults to "50K_palmer_v20".
-
-    Returns:
-    None
-    """
-    outpath=basepath+shape_model+"/"+survey_name+"/"
-    os.makedirs(outpath, exist_ok=True)
-    filename="sclk_"+str(sclk_row_index).zfill(5)+".pkl"
-    outname=outpath+filename
-    with open(outname, 'wb') as buff:
-        pickle.dump(trace, buff)
-
+  
 def convert_trace_to_dict(trace,chain_length):
     variables=list(trace.posterior.data_vars) 
     n_chain_sample=chain_length//2
