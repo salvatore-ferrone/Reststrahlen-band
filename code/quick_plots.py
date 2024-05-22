@@ -18,7 +18,7 @@ def check_fit(survey_name, row_index):
     # my_spectrum=np.array(my_spectrum,dtype=float)   
     
     # get the fit
-    path_to_fit= "/scratch2/sferrone/OREX/fits/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5"
+    path_to_fit= "/scratch2/sferrone/OREX/fits/"+survey_name+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5"
     
     with h5py.File(path_to_fit,'r') as fp:
         fit_array=fp['chain'][:]

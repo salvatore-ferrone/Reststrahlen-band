@@ -12,3 +12,5 @@ notebooks/
 *.log
 *.out
 *.err
+/jobfiles
+/RS_band
