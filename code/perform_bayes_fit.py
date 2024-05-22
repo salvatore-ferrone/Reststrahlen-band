@@ -71,7 +71,7 @@ def obtain_single_band_spectrum_priors(wavenumber,spectrum):
     m=popt_cont[1]
     y=spectrum.mean()
     b=y-m*wavenumber.mean()
-    prior_b_sigma = 1*b # rather wide prior
+    prior_b_sigma = 5 # rather wide prior since we only have a gentle slope on the order of 1 + 1/1000
     
     ## the noise amplitude
     

@@ -9,7 +9,7 @@ from path_handler import PathHandler
 import os 
 
 def set_parameters(wv_num_min=520,wv_num_max=1150,chain_length = 1000,chain_sample=250,n_chains=4):
-    return wv_num_min, wv_num_max, chain_length,chain_sample,n_chains
+    return wv_num_min,wv_num_max,chain_length,chain_sample,n_chains
 
 
 def open_data(path_to_spectra,path_to_wave_numbers):
@@ -126,6 +126,6 @@ def main(row_index,survey_name):
 
 
 if __name__=="__main__":
-    survey_name="EQ3"
+    survey_name="EQ2"
     row_index=int(sys.argv[1])
     main(row_index,survey_name)
