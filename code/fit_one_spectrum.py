@@ -126,6 +126,6 @@ def main(row_index,survey_name):
 
 
 if __name__=="__main__":
-    survey_name="EQ2"
+    survey_name="EQ4"
     row_index=int(sys.argv[1])
     main(row_index,survey_name)
