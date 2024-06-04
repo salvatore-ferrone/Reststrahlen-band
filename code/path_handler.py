@@ -15,7 +15,8 @@ class PathHandler:
             self.basepaths = json.load(f)
             
         self.wavenumbers= self.basepaths['wavenumbers']
-
+        self.shapemodel="palmer50k"
+    
     def build_path(self, base_path, *args):
         """
         Build a path by joining base_path with all other arguments.
@@ -44,3 +45,8 @@ class PathHandler:
         }
 
         return self.build_path(self.basepaths["json_getspots"], get_spots_eq[survey_name])
+    
+    
+    def facet_spectra(self,survey_name,face_number_str):
+        return self.build_path(self.basepaths["facet_spectra"],
+                               self.shapemodel,survey_name,face_number_str+".h5")
