@@ -11,11 +11,22 @@ import perform_bayes_fit as PBF #type: ignore
 def main(survey_name="EQ3"):
     paths=PathHandler()
     spectra_csv, wavenumbers = FOS.open_data(paths.otes_csv("EQ3"), paths.wavenumbers)
+    
     with open(paths.json_getspots(survey_name)) as fp:
         getspots = json.load(fp)
     facetstrs=list(getspots.keys())
     
     ### LOOP OVER ALL FACETS ###
+    jj = 1 
+    facet_str= facetstrs[jj]
+    present_sclks,fnames=get_present_sclks_and_bayes_filenames_for_facet(\
+        jj,getspots,spectra_csv,survey_name,paths)
+    facet_mean_spectra,facet_mean_continuum,wavenumber =mean_spectra_and_band_depth(\
+        fnames)
+    mindexes,band_depth=measure_band_depth(\
+        facet_mean_spectra,facet_mean_continuum)
+    write_out(\
+        paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames)
     
 
 def make_spectrum_and_continuum(i,wavenumber,fit_array):
@@ -39,6 +50,7 @@ def snag_fit_data(fname):
         wavenumber=fp['chain'].attrs['wavenumber'][:]
         sclk=fp['chain'].attrs['sclk']
     return fit_array, spectrum, wavenumber, sclk
+
 
 def get_present_sclks_and_bayes_filenames_for_facet(jj,getspots,spectra_csv,survey_name,paths):
     facet_str = "F"+str(jj+1)
@@ -89,3 +101,26 @@ def measure_band_depth(facet_mean_spectra,facet_mean_continuum):
         mindexes[ii] = np.argmin(facet_mean_spectra[ii,:])
         band_depth[ii] = facet_mean_continuum[ii,mindexes[ii]]-facet_mean_spectra[ii,mindexes[ii]]
     return mindexes,band_depth
+
+
+def write_out(paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames):
+    filename=paths.facet_spectra(survey_name,facet_str)
+    with h5py.File(filename,'w') as myfile:
+        myfile.create_dataset("facet_mean_spectra", data=facet_mean_spectra)
+        myfile.create_dataset("facet_mean_continuum", data=facet_mean_continuum)
+        myfile.create_dataset("wavenumber", data=wavenumber)
+        myfile.create_dataset("mindexes", data=mindexes)
+        myfile.create_dataset("band_depth", data=band_depth)
+        myfile.create_dataset("sclks", data=present_sclks)
+        myfile.create_dataset("fnames", data=np.array(fnames,dtype='S'))
+
+        myfile.attrs["author"]="salvatore ferrone"
+        myfile.attrs["email"]="salvatore.ferrone@uniroma1.it"
+        myfile.attrs["survey_name"]=survey_name
+        myfile.attrs["facet_str"]=facet_str
+        myfile.attrs["creation_date"]=str(np.datetime_as_string(np.datetime64('today'), unit='D'))
+    print("saved",filename)
+
+
+if __name__=="__main__":
+    main()
