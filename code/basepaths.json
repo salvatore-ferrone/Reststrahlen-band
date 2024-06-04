@@ -1,5 +1,6 @@
 {   
     "OTES_csv": "/scratch2/sferrone/OREX/OTES/",
     "bayes_fits": "/scratch2/sferrone/OREX/bayes_fits/",
-    "wavenumbers": "/scratch2/sferrone/OREX/OTES/OTES_wnb.csv"
+    "wavenumbers": "/scratch2/sferrone/OREX/OTES/OTES_wnb.csv",
+    "json_getspots": "/scratch2/sferrone/OREX/json_getspots"
 }

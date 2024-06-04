@@ -9,11 +9,11 @@ import os
 
 class PathHandler:
     def __init__(self):
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
         json_file = os.path.join(dir_path, "basepaths.json")
         with open(json_file, 'r') as f:
             self.basepaths = json.load(f)
+            
         self.wavenumbers= self.basepaths['wavenumbers']
 
     def build_path(self, base_path, *args):
@@ -34,17 +34,13 @@ class PathHandler:
         directory=self.bayes_folder(survey_name)
         return self.build_path(directory+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5")
 
-# def obtain_file_paths(ii,shape_model="50K_palmer_v20"):
-#     # set up the paths
-#     get_spots_path_base="../data/getspots_shapeModels/"+shape_model+"/OTES/"+get_spots_paths[ii]+"/"
-#     get_spots_file_name = get_spots_file_names[get_spots_paths[ii]]+"_"+shape_model_switcher[shape_model]+"_smf.txt"
-#     spectra_path="../data/datiotescomplete/"+spectra_file_names[ii]
-#     get_spots_path=get_spots_path_base+get_spots_file_name
-#     ancillary_file_path = "../data/getspots_shapeModels/"+shape_model+"/g_06310mm_spc_tes_0000n00000_v020.fits"
-#     wave_channel_path = "../data/datiotescomplete/OTES_wnb.csv"
-#     paths = {"get_spots_path":get_spots_path,
-#             "spectra_path":spectra_path,
-#             "ancillary_file_path":ancillary_file_path,
-#             "wave_channel_path":wave_channel_path}
+    def json_getspots(self, survey_name):
+        get_spots_eq = {
+            "EQ1": "OTES_DTS_EQ3pm_facet_sclks.json",
+            "EQ4": "OTES_DTS_EQ10am_facet_sclks.json",
+            "EQ2": "OTES_DTS_EQ320am_facet_sclks.json",
+            "EQ3": "OTES_DTS_EQ1230pm_facet_sclks.json",
+            "EQ6": "OTES_DTS_EQ840pm_facet_sclks.json",
+        }
 
-#     return paths
+        return self.build_path(self.basepaths["json_getspots"], get_spots_eq[survey_name])
