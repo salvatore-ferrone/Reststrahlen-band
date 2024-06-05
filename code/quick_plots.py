@@ -72,4 +72,4 @@ def add_plot_fits(fig,axis,fit_array, wavenumber):
 
 if __name__=="__main__":
     row_index = int(sys.argv[1])
-    check_fit("EQ4", row_index)
+    check_fit("EQ1", row_index)
