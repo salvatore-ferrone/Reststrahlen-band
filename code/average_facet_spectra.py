@@ -5,10 +5,11 @@ import numpy as np
 from path_handler import PathHandler #type: ignore
 import fit_one_spectrum as FOS #type: ignore
 import perform_bayes_fit as PBF #type: ignore
+import multiprocessing as mp 
+import datetime
 
 
-
-def main(survey_name="EQ3"):
+def main(survey_name="EQ3",ncpu=10):
     paths=PathHandler()
     spectra_csv, wavenumbers = FOS.open_data(paths.otes_csv("EQ3"), paths.wavenumbers)
     
@@ -17,7 +18,22 @@ def main(survey_name="EQ3"):
     facetstrs=list(getspots.keys())
     
     ### LOOP OVER ALL FACETS ###
-    jj = 1 
+    Nfacets = len(facetstrs)
+    # for jj in range(10):
+    start_time = datetime.datetime.now()
+    pool=mp.Pool(ncpu)
+    for jj in range(150,Nfacets):
+        pool.apply_async(loop_over_facets,args=(jj,getspots,facetstrs,spectra_csv,survey_name,paths))
+    pool.close()    
+    pool.join()
+    # for jj in range(40,90):
+        # loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths)
+    end_time = datetime.datetime.now()
+    print("Time elapsed: ",end_time-start_time)
+    print("Done")
+    
+    
+def loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths):
     facet_str= facetstrs[jj]
     present_sclks,fnames=get_present_sclks_and_bayes_filenames_for_facet(\
         jj,getspots,spectra_csv,survey_name,paths)
@@ -119,7 +135,7 @@ def write_out(paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuu
         myfile.attrs["survey_name"]=survey_name
         myfile.attrs["facet_str"]=facet_str
         myfile.attrs["creation_date"]=str(np.datetime_as_string(np.datetime64('today'), unit='D'))
-    print("saved",filename)
+    print("Wrote ",filename)
 
 
 if __name__=="__main__":
