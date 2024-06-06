@@ -38,9 +38,9 @@ class PathHandler:
     def json_getspots(self, survey_name):
         get_spots_eq = {
             "EQ1": "OTES_DTS_EQ3pm_facet_sclks.json",
-            "EQ4": "OTES_DTS_EQ10am_facet_sclks.json",
             "EQ2": "OTES_DTS_EQ320am_facet_sclks.json",
             "EQ3": "OTES_DTS_EQ1230pm_facet_sclks.json",
+            "EQ4": "OTES_DTS_EQ10am_facet_sclks.json",
             "EQ6": "OTES_DTS_EQ840pm_facet_sclks.json",
         }
 
