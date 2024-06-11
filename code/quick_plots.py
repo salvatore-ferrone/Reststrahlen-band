@@ -2,12 +2,12 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import perform_bayes_fit as PBF
-import fit_one_spectrum as FOS
+import one_gauss_bayes as OGB
 import sys 
+from path_handler import PathHandler
 
 
-
-def check_fit(survey_name, row_index):
+def check_fit(survey_name, row_index,model_name):
     # wv_num_min, wv_num_max, _,_,_=FOS.set_parameters()
     # path_to_spectra, path_to_wave_numbers=FOS.get_paths(survey_name=survey_name)
     # spectra_csv, wave_nb=FOS.open_data(path_to_spectra, path_to_wave_numbers)
@@ -18,7 +18,11 @@ def check_fit(survey_name, row_index):
     # my_spectrum=np.array(my_spectrum,dtype=float)   
     
     # get the fit
-    path_to_fit= "/scratch2/sferrone/OREX/bayes_fits/"+survey_name+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5"
+    
+    # path_to_fit= "/scratch2/sferrone/OREX/bayes_fits/"+survey_name+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5"
+    
+    paths=PathHandler()
+    path_to_fit=paths.bayes_fits_fname(survey_name, row_index,model_name=model_name)
     
     with h5py.File(path_to_fit,'r') as fp:
         fit_array=fp['chain'][:]
@@ -32,7 +36,10 @@ def check_fit(survey_name, row_index):
     
     fig, axis=plt.subplots(1,1,figsize=(8,5))
     fig, axis=add_spectrum(fig,axis,wavenumber,spectrum)
-    fig, axis=add_plot_fits(fig,axis,fit_array, wavenumber)
+    if model_name=="two_gauss":
+        fig, axis=add_plot_fits_two_gauss(fig,axis,fit_array, wavenumber)
+    if model_name=="one_gauss":
+        fig, axis=add_plot_fits_one_gauss(fig,axis,fit_array, wavenumber)
     
     axis.set_title("{:s} {:s}".format(survey_name, sclk))
 
@@ -44,7 +51,7 @@ def check_fit(survey_name, row_index):
     fig.tight_layout()
 
 
-    fname = "{:s}_OTES_{:04d}.png".format(survey_name, row_index)
+    fname = "{:s}_OTES_{:04d}_{:s}.png".format(survey_name, row_index,model_name)
     fig.savefig("/obs/sferrone/Reststrahlen-band/quickplots/"+fname, dpi=300)
     plt.close(fig)
 
@@ -53,7 +60,7 @@ def add_spectrum(fig,axis,wavenumber,spectrum):
     axis.scatter(wavenumber,spectrum,**properties)
     return fig, axis
 
-def add_plot_fits(fig,axis,fit_array, wavenumber):
+def add_plot_fits_two_gauss(fig,axis,fit_array, wavenumber):
     
     params={"alpha":0.01,"color":"white"}
     for i in range(fit_array.shape[1]):
@@ -70,9 +77,25 @@ def add_plot_fits(fig,axis,fit_array, wavenumber):
         axis.plot(wavenumber, spectrum, **params)
         axis.plot(wavenumber, continuum, **params)
         
-
     return fig, axis
 
+def add_plot_fits_one_gauss(fig,axis,fit_array, wavenumber):
+    
+    params={"alpha":0.01,"color":"white"}
+    for i in range(fit_array.shape[1]):
+        m=fit_array[0,i]
+        b=fit_array[1,i]
+        A=fit_array[2,i]
+        k=fit_array[3,i]
+        sigma=fit_array[4,i]
+        spectrum=OGB.model_single_gauss_spec(wavenumber, b, m, A, k, sigma)
+        continuum=PBF.continuum(wavenumber, b, m)
+        axis.plot(wavenumber, spectrum, **params)
+        axis.plot(wavenumber, continuum, **params)
+        
+    return fig, axis    
+
 if __name__=="__main__":
+    model_name = "one_gauss"
     row_index = int(sys.argv[1])
-    check_fit("EQ2", row_index)
+    check_fit("EQ2", row_index,model_name)

@@ -29,7 +29,10 @@ def build_model(wavenumber, spectrum):
     noise_amplitude = \
         PBF.obtain_single_band_spectrum_priors(wavenumber, spectrum)
 
+    wave_number_range = wavenumber.max() - wavenumber.min()
+    upper_threshold = wave_number_range/2
     
+    lower_threshold = 5*np.mean(np.diff(wavenumber))
     with pymc.Model() as model:
         m = pymc.Normal('m', mu=prior_m_mu, sigma=prior_m_sigma)
         b = pymc.Normal('b', mu=prior_b_mu, sigma=prior_b_sigma)
@@ -37,6 +40,8 @@ def build_model(wavenumber, spectrum):
         kbar=pymc.Normal('kbar', mu=Kbar, sigma=Kbar_sigma)
         sigma=pymc.HalfNormal('sigma', sigma=prior_sigma_sigma)
         
+        pymc.Potential('upper_bound', pymc.math.switch(sigma > upper_threshold, -np.inf, 0))
+        pymc.Potential('lower_bound', pymc.math.switch(sigma < lower_threshold, -np.inf, 0))
         my_model_spectrum=model_single_gauss_spec(wavenumber,b,m,A,kbar,sigma)
         observed = spectrum
         Y_obs = pymc.Normal('Y_obs', mu=my_model_spectrum, sigma=float(noise_amplitude), observed=spectrum)
@@ -44,32 +49,76 @@ def build_model(wavenumber, spectrum):
     return model
         
         
+def variable_names():
+    return ["m","b","A","kbar","sigma"]
+        
 def main(row_index,survey_name):
     
-    paths=PathHandler()
+    
+    model_name = "one_gauss"
     start_time = datetime.datetime.now()
-    # open params
+    #### PARAMS open params
+    paths=PathHandler()
     wv_num_min, wv_num_max, chain_length,chain_sample,n_chains=\
         FOS.set_parameters()
-    # import 
+    
+    #### PATHS
     path_to_spectra=paths.otes_csv(survey_name)
     path_to_wave_numbers=paths.wavenumbers
-    out_file_name=paths.bayes_fits_fname(survey_name,row_index)
-    
-    # check if outfile alrady exists
+    out_file_name=paths.bayes_fits_fname(survey_name,row_index,model_name)
     if os.path.exists(out_file_name):
         print("Skipping\n",out_file_name, "\n It already exists\nDelete if you wish recompute")
         return
     
-    spectra_csv, wave_nb=\
-        FOS.open_data(path_to_spectra,path_to_wave_numbers)
-    wavenumber, spectra_filter=\
-        FOS.filter_by_wavenumber(wave_nb,wv_num_min,wv_num_max)
-    variable_names=FOS.get_variable_names()
-    
+    #### LOAD
+    spectra_csv, wave_nb=FOS.open_data(path_to_spectra,path_to_wave_numbers)
+    wavenumber, spectra_filter=FOS.filter_by_wavenumber(wave_nb,wv_num_min,wv_num_max)
     sclk=spectra_csv.iloc[row_index]['sclk_string']
     my_spectrum=spectra_csv.iloc[row_index][spectra_filter].to_numpy()
     my_spectrum=np.array(my_spectrum,dtype=float)
+    variable_names=FOS.get_variable_names()
     
-    
+    ### PART 1 DONE
     print("Data loaded",datetime.datetime.now()-start_time)
+    
+    ##### DO THE MARKOV CHAIN
+    model=build_model(wavenumber,my_spectrum)
+    ### DO  TRACE
+    with model:
+        trace=pymc.sample(chain_length)
+    ### Get number of divergences
+    num_diverge=np.sum(trace.sample_stats.diverging.to_numpy())
+    
+    ### STORE IN DICTIONARY 
+    trace_dict=PBF.store_trace_in_dict(sclk,variable_names,trace,chain_length,chain_sample)
+    outarray=np.zeros((len(variable_names),chain_sample*n_chains))
+    for i in range(len(variable_names)):
+        outarray[i,:]=trace_dict[sclk][variable_names[i]]
+        
+    #### WRITE TO HDF5
+    FOS.write_to_hdf5(\
+        out_file_name,
+        survey_name,
+        row_index,
+        outarray,
+        variable_names,
+        sclk,
+        n_chains,
+        chain_sample,
+        chain_length,
+        wavenumber,
+        my_spectrum,
+        wv_num_min,
+        wv_num_max,
+        path_to_spectra,
+        path_to_wave_numbers,
+        num_diverge,
+        model_name)
+        
+    
+    
+    
+if __name__ == "__main__":
+    row_index=int(sys.argv[1])
+    survey_name=sys.argv[2]
+    main(int(sys.argv[1]),sys.argv[2])

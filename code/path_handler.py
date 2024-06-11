@@ -26,13 +26,13 @@ class PathHandler:
     def otes_csv(self, survey_name):
         return self.build_path(self.basepaths["OTES_csv"], survey_name+"_data_spectra.csv")
 
-    def bayes_folder(self, survey_name):
-        directory=self.build_path(self.basepaths["bayes_fits"], survey_name)
+    def bayes_folder(self, survey_name,model_name="two_gauss"):
+        directory=self.build_path(self.basepaths["bayes_fits"], survey_name, model_name)
         os.makedirs(directory, exist_ok=True)
         return directory
     
-    def bayes_fits_fname(self, survey_name, row_index):
-        directory=self.bayes_folder(survey_name)
+    def bayes_fits_fname(self, survey_name, row_index,model_name="two_gauss"):
+        directory=self.bayes_folder(survey_name,model_name)
         return self.build_path(directory+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5")
 
     def json_getspots(self, survey_name):

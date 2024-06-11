@@ -26,7 +26,7 @@ def filter_by_wavenumber(wave_nb,wv_num_min,wv_num_max):
     return wavenumber, spectra_filter
 
 def get_variable_names():
-    return ["m","b","A_0","A_1","kbar_0","kbar_1","sigma_0","sigma_1"]
+    return ["m","b","A","kbar","sigma"]
 
 def write_to_hdf5(
     out_file_path,
@@ -43,8 +43,9 @@ def write_to_hdf5(
     wv_num_min,
     wv_num_max,
     path_to_spectra,
-    path_to_wave_numbers
-    
+    path_to_wave_numbers,
+    num_diverging,
+    model_name
 ):
 
     with h5py.File(out_file_path,'w') as f:
@@ -63,6 +64,8 @@ def write_to_hdf5(
         dset.attrs['path_to_spectra']=path_to_spectra
         dset.attrs['path_to_wave_numbers']=path_to_wave_numbers
         dset.attrs['row_index']=row_index
+        dset.attrs['diverging']=num_diverging
+        dset.attrs['model_name']=model_name
 
 def main(row_index,survey_name):
     
@@ -100,6 +103,8 @@ def main(row_index,survey_name):
     print("Trace done\n Storing",datetime.datetime.now()-start_time)
     trace_dict=PBF.store_trace_in_dict(sclk,variable_names,trace,chain_length,chain_sample)
     
+    num_diverge=np.sum(trace.sample_stats.diverging.to_numpy())
+    
     # store in output array
     outarray=np.zeros((len(variable_names),chain_sample*n_chains))
     for i in range(len(variable_names)):
@@ -120,7 +125,9 @@ def main(row_index,survey_name):
         wv_num_min,
         wv_num_max,
         path_to_spectra,
-        path_to_wave_numbers
+        path_to_wave_numbers,
+        num_diverge,
+        model_name
     )
     print("Done",datetime.datetime.now()-start_time)
 
