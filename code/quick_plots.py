@@ -39,7 +39,7 @@ def check_fit(survey_name, row_index):
     axis.set_xlabel("Wavenumber [cm$^{-1}$]")  
     axis.set_ylabel("Emisivity ")
     
-    axis.set_ylim(0.95,.99)
+    axis.set_ylim(0.95,1.01)
     
     fig.tight_layout()
 
@@ -66,10 +66,13 @@ def add_plot_fits(fig,axis,fit_array, wavenumber):
         sigma0=fit_array[6,i]
         sigma1=fit_array[7,i]
         spectrum=PBF.model_spectrum(wavenumber, b, m, [A0, A1], [k0, k1], [sigma0, sigma1])
+        continuum=PBF.continuum(wavenumber, b, m)
         axis.plot(wavenumber, spectrum, **params)
+        axis.plot(wavenumber, continuum, **params)
+        
 
     return fig, axis
 
 if __name__=="__main__":
     row_index = int(sys.argv[1])
-    check_fit("EQ6", row_index)
+    check_fit("EQ2", row_index)
