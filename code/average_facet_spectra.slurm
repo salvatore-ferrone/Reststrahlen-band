@@ -11,7 +11,7 @@
 
 
 
-source /obs/sferrone/Reststrahlen-band/pymc_pkg/bin/activate
+conda activate pymc5
 
 python3 average_facet_spectra.py
 

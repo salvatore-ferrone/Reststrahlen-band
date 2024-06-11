@@ -9,9 +9,9 @@ import multiprocessing as mp
 import datetime
 
 
-def main(survey_name="EQ3",ncpu=10):
+def main(survey_name="EQ6",ncpu=10):
     paths=PathHandler()
-    spectra_csv, wavenumbers = FOS.open_data(paths.otes_csv("EQ3"), paths.wavenumbers)
+    spectra_csv, wavenumbers = FOS.open_data(paths.otes_csv(survey_name), paths.wavenumbers)
     
     with open(paths.json_getspots(survey_name)) as fp:
         getspots = json.load(fp)
@@ -19,14 +19,15 @@ def main(survey_name="EQ3",ncpu=10):
     
     ### LOOP OVER ALL FACETS ###
     Nfacets = len(facetstrs)
+    Nfacets = 20
     # for jj in range(10):
     start_time = datetime.datetime.now()
     pool=mp.Pool(ncpu)
-    for jj in range(150,Nfacets):
+    for jj in range(0,200):
         pool.apply_async(loop_over_facets,args=(jj,getspots,facetstrs,spectra_csv,survey_name,paths))
     pool.close()    
     pool.join()
-    # for jj in range(40,90):
+    # for jj in range(0,10):
         # loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths)
     end_time = datetime.datetime.now()
     print("Time elapsed: ",end_time-start_time)

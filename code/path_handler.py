@@ -48,5 +48,7 @@ class PathHandler:
     
     
     def facet_spectra(self,survey_name,face_number_str):
-        return self.build_path(self.basepaths["facet_spectra"],
-                               self.shapemodel,survey_name,face_number_str+".h5")
+        dir=self.build_path(self.basepaths["facet_spectra"],self.shapemodel,survey_name)
+        os.makedirs(dir,exist_ok=True)
+        return self.build_path(dir,face_number_str+".h5")
+
