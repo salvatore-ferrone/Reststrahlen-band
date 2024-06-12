@@ -30,7 +30,7 @@ def build_model(wavenumber, spectrum):
         PBF.obtain_single_band_spectrum_priors(wavenumber, spectrum)
 
     wave_number_range = wavenumber.max() - wavenumber.min()
-    upper_threshold = wave_number_range/2
+    upper_threshold = wave_number_range/4
     
     lower_threshold = 5*np.mean(np.diff(wavenumber))
     with pymc.Model() as model:

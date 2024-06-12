@@ -67,7 +67,7 @@ def write_to_hdf5(
         dset.attrs['diverging']=num_diverging
         dset.attrs['model_name']=model_name
 
-def main(row_index,survey_name):
+def main(row_index,survey_name,model_name):
     
     paths=PathHandler()
     start_time = datetime.datetime.now()
@@ -133,6 +133,7 @@ def main(row_index,survey_name):
 
 
 if __name__=="__main__":
+    model_name="two_gauss"
     row_index=int(sys.argv[1])
     survey_name=sys.argv[2]
-    main(row_index,survey_name)
+    main(row_index,survey_name,model_name)
