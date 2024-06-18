@@ -7,11 +7,11 @@ import fit_one_spectrum as FOS #type: ignore
 import perform_bayes_fit as PBF #type: ignore
 import multiprocessing as mp 
 import datetime
+import one_gauss_bayes as OGB #type: ignore
 
-
-def main(survey_name="EQ6",ncpu=10):
+def main(survey_name="EQ2",ncpu=20,model_name="one_gauss"):
     paths=PathHandler()
-    spectra_csv, wavenumbers = FOS.open_data(paths.otes_csv(survey_name), paths.wavenumbers)
+    spectra_csv, _ = FOS.open_data(paths.otes_csv(survey_name), paths.wavenumbers)
     
     with open(paths.json_getspots(survey_name)) as fp:
         getspots = json.load(fp)
@@ -19,34 +19,44 @@ def main(survey_name="EQ6",ncpu=10):
     
     ### LOOP OVER ALL FACETS ###
     Nfacets = len(facetstrs)
-    Nfacets = 20
-    # for jj in range(10):
+    first_facet = 2500
     start_time = datetime.datetime.now()
     pool=mp.Pool(ncpu)
-    for jj in range(0,200):
-        pool.apply_async(loop_over_facets,args=(jj,getspots,facetstrs,spectra_csv,survey_name,paths))
+    for jj in range(0,Nfacets):
+        pool.apply_async(loop_over_facets,args=(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_name))
     pool.close()    
     pool.join()
-    # for jj in range(0,10):
-        # loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths)
+    # for jj in range(0,Nfacets):
+        # loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_name)
+        # print("Done with ",jj)
     end_time = datetime.datetime.now()
     print("Time elapsed: ",end_time-start_time)
     print("Done")
     
     
-def loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths):
+def loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_name):
     facet_str= facetstrs[jj]
     present_sclks,fnames=get_present_sclks_and_bayes_filenames_for_facet(\
-        jj,getspots,spectra_csv,survey_name,paths)
+        jj,getspots,spectra_csv,survey_name,paths,model_name=model_name)
     facet_mean_spectra,facet_mean_continuum,wavenumber =mean_spectra_and_band_depth(\
-        fnames)
+        fnames,model_name=model_name)
     mindexes,band_depth=measure_band_depth(\
         facet_mean_spectra,facet_mean_continuum)
     write_out(\
         paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames)
     
 
-def make_spectrum_and_continuum(i,wavenumber,fit_array):
+def make_spectrum_and_continuum_one_gauss(i,wavenumber,fit_array):
+    m=fit_array[0,i]
+    b=fit_array[1,i]
+    A=fit_array[2,i]
+    k=fit_array[3,i]
+    sigma=fit_array[4,i]
+    spectrum=OGB.model_single_gauss_spec(wavenumber, b, m, A, k, sigma)
+    continuum = m*wavenumber+b
+    return spectrum,continuum
+
+def make_spectrum_and_continuum_two_gauss(i,wavenumber,fit_array):
     m=fit_array[0,i]
     b=fit_array[1,i]
     A0=fit_array[2,i]
@@ -69,7 +79,7 @@ def snag_fit_data(fname):
     return fit_array, spectrum, wavenumber, sclk
 
 
-def get_present_sclks_and_bayes_filenames_for_facet(jj,getspots,spectra_csv,survey_name,paths):
+def get_present_sclks_and_bayes_filenames_for_facet(jj,getspots,spectra_csv,survey_name,paths,model_name):
     facet_str = "F"+str(jj+1)
     n_sclk = len(getspots[facet_str]['sclks'])
     fnames,present_sclks = [],[]
@@ -81,7 +91,7 @@ def get_present_sclks_and_bayes_filenames_for_facet(jj,getspots,spectra_csv,surv
             continue
         else:
             indx = subset.index[0]
-            fname=paths.bayes_fits_fname(survey_name,indx)
+            fname=paths.bayes_fits_fname(survey_name,indx,model_name=model_name)
             if os.path.exists(fname):
                 fnames.append(fname)
                 present_sclks.append(sclk)
@@ -90,7 +100,7 @@ def get_present_sclks_and_bayes_filenames_for_facet(jj,getspots,spectra_csv,surv
     return present_sclks,fnames
 
 ### now iterate over the present sclks
-def mean_spectra_and_band_depth(fnames,):
+def mean_spectra_and_band_depth(fnames,model_name):
     ## initialize the output 
     fit_array, raw_spectrum, wavenumber, sclk = snag_fit_data(fnames[0])
     n_spec, n_fits = len(fnames),fit_array.shape[1]
@@ -98,10 +108,13 @@ def mean_spectra_and_band_depth(fnames,):
     continuum_array = np.zeros((n_spec,n_fits,raw_spectrum.shape[0]))
     # iterate over each sclk
     for ii in range(n_spec):
-        fit_array, raw_spectrum, wavenumber, sclk = snag_fit_data(fnames[ii])
+        fit_array, raw_spectrum, wavenumber, _ = snag_fit_data(fnames[ii])
         # iterate over each bayes fit 
         for jj in range(n_fits):
-            temp_spec,temp_continu = make_spectrum_and_continuum(jj,wavenumber,fit_array)
+            if model_name=="two_gauss":
+                temp_spec,temp_continu = make_spectrum_and_continuum_two_gauss(jj,wavenumber,fit_array)
+            elif model_name=="one_gauss":
+                temp_spec,temp_continu = make_spectrum_and_continuum_one_gauss(jj,wavenumber,fit_array)
             spectral_array[ii,jj,:] = temp_spec
             continuum_array[ii,jj,:] = temp_continu
     # average down
@@ -140,4 +153,7 @@ def write_out(paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuu
 
 
 if __name__=="__main__":
-    main()
+    survey_name="EQ2"
+    ncpu=20
+    model_name="one_gauss"
+    main(survey_name=survey_name,ncpu=ncpu,model_name=model_name)
