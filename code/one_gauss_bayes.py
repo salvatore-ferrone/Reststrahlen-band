@@ -36,7 +36,7 @@ def build_model(wavenumber, spectrum):
         b = pymc.Normal('b', mu=prior_b_mu, sigma=prior_b_sigma)
         A=pymc.Normal('A', mu=A_mu, sigma=A_sigma)
         kbar=pymc.Normal('kbar', mu=Kbar, sigma=Kbar_sigma)
-        sigma=pymc.HalfNormal('sigma', sigma=prior_sigma_sigma)
+        sigma=pymc.HalfNormal('sigma', sigma=prior_sigma_mu)
         
         pymc.Potential('upper_bound', pymc.math.switch(sigma > upper_threshold, -np.inf, 0))
         pymc.Potential('lower_bound', pymc.math.switch(sigma < lower_threshold, -np.inf, 0))
@@ -45,7 +45,7 @@ def build_model(wavenumber, spectrum):
         Y_obs = pymc.Normal('Y_obs', mu=my_model_spectrum, sigma=float(noise_amplitude), observed=spectrum)
         
     return model
-        
+
         
 def variable_names():
     return ["m","b","A","kbar","sigma"]
