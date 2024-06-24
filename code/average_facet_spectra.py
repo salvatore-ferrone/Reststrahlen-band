@@ -9,24 +9,28 @@ import multiprocessing as mp
 import datetime
 import one_gauss_bayes as OGB #type: ignore
 
-def main(survey_name="EQ2",ncpu=20,model_name="one_gauss"):
+def main(survey_name,ncpu,model_name):
+    print("In main")
+    first_facet = 3400
+    
     paths=PathHandler()
     spectra_csv, _ = FOS.open_data(paths.otes_csv(survey_name), paths.wavenumbers)
-    
+    print("Opened ",paths.otes_csv(survey_name))
     with open(paths.json_getspots(survey_name)) as fp:
         getspots = json.load(fp)
     facetstrs=list(getspots.keys())
-    
+    print("Opened ",paths.json_getspots(survey_name))
     ### LOOP OVER ALL FACETS ###
     Nfacets = len(facetstrs)
-    first_facet = 2500
+    # Nfacets = 2*first_facet
     start_time = datetime.datetime.now()
     pool=mp.Pool(ncpu)
-    for jj in range(0,Nfacets):
+    print("Starting mp pool with ",ncpu," cpus")
+    for jj in range(first_facet,Nfacets):
         pool.apply_async(loop_over_facets,args=(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_name))
     pool.close()    
     pool.join()
-    # for jj in range(0,Nfacets):
+    # for jj in range(first_facet,Nfacets):
         # loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_name)
         # print("Done with ",jj)
     end_time = datetime.datetime.now()
@@ -43,7 +47,7 @@ def loop_over_facets(jj,getspots,facetstrs,spectra_csv,survey_name,paths,model_n
     mindexes,band_depth=measure_band_depth(\
         facet_mean_spectra,facet_mean_continuum)
     write_out(\
-        paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames)
+        paths,survey_name,model_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames)
     
 
 def make_spectrum_and_continuum_one_gauss(i,wavenumber,fit_array):
@@ -133,8 +137,8 @@ def measure_band_depth(facet_mean_spectra,facet_mean_continuum):
     return mindexes,band_depth
 
 
-def write_out(paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames):
-    filename=paths.facet_spectra(survey_name,facet_str)
+def write_out(paths,survey_name,model_name,facet_str,facet_mean_spectra,facet_mean_continuum,wavenumber,mindexes,band_depth,present_sclks,fnames):
+    filename=paths.facet_spectra(survey_name,model_name,facet_str)
     with h5py.File(filename,'w') as myfile:
         myfile.create_dataset("facet_mean_spectra", data=facet_mean_spectra)
         myfile.create_dataset("facet_mean_continuum", data=facet_mean_continuum)
@@ -153,7 +157,7 @@ def write_out(paths,survey_name,facet_str,facet_mean_spectra,facet_mean_continuu
 
 
 if __name__=="__main__":
-    survey_name="EQ2"
+    survey_name="EQ1"
     ncpu=20
-    model_name="one_gauss"
+    model_name="two_gauss"
     main(survey_name=survey_name,ncpu=ncpu,model_name=model_name)
