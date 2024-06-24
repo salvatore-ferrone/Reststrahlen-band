@@ -17,8 +17,8 @@ def model_single_gauss_spec(x,b,m,A,kbar,sigma):
 
 
 def build_model(wavenumber, spectrum):
-    
-    
+
+
     (prior_b_mu,prior_b_sigma), \
     (prior_m_mu,prior_m_sigma),\
     (A_mu,A_sigma),\
@@ -50,31 +50,43 @@ def build_model(wavenumber, spectrum):
 def variable_names():
     return ["m","b","A","kbar","sigma"]
         
-def main(row_index,survey_name):
-    
-    
-    model_name = "one_gauss"
-    start_time = datetime.datetime.now()
-    #### PARAMS open params
-    paths=PathHandler()
-    wv_num_min, wv_num_max, chain_length,chain_sample,n_chains=\
-        FOS.set_parameters()
-    
+        
+        
+def load_paths(paths,survey_name,model_name,row_index):
     #### PATHS
     path_to_spectra=paths.otes_csv(survey_name)
     path_to_wave_numbers=paths.wavenumbers
     out_file_name=paths.bayes_fits_fname(survey_name,row_index,model_name)
-    if os.path.exists(out_file_name):
-        print("Skipping\n",out_file_name, "\n It already exists\nDelete if you wish recompute")
-        return
-    
-    #### LOAD
+    return path_to_spectra,path_to_wave_numbers,out_file_name
+
+def load_target_spectrum(path_to_spectra,path_to_wave_numbers,wv_num_min,wv_num_max,row_index):
     spectra_csv, wave_nb=FOS.open_data(path_to_spectra,path_to_wave_numbers)
     wavenumber, spectra_filter=FOS.filter_by_wavenumber(wave_nb,wv_num_min,wv_num_max)
     sclk=spectra_csv.iloc[row_index]['sclk_string']
     my_spectrum=spectra_csv.iloc[row_index][spectra_filter].to_numpy()
     my_spectrum=np.array(my_spectrum,dtype=float)
+    return wavenumber,my_spectrum,sclk
+
+
+def main(row_index,survey_name):
+    
+    
+    start_time = datetime.datetime.now()
+    #### PARAMETERS
+    model_name  =   "one_gauss"
+    paths       =   PathHandler()
+    wv_num_min, wv_num_max, chain_length,chain_sample,n_chains=FOS.set_parameters()
     variable_names=FOS.get_variable_names()
+    
+    #### PATHS
+    path_to_spectra,path_to_wave_numbers,out_file_name=load_paths(paths,survey_name,model_name,row_index)
+    if os.path.exists(out_file_name):
+        print("Skipping\n",out_file_name, "\n It already exists\nDelete if you wish recompute")
+        return
+    
+    #### LOAD TARGET SPECTRUM 
+    wavenumber,my_spectrum,sclk=load_target_spectrum(path_to_spectra,path_to_wave_numbers,wv_num_min,wv_num_max,row_index)
+
     
     ### PART 1 DONE
     print("Data loaded",datetime.datetime.now()-start_time)

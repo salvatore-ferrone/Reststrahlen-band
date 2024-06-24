@@ -62,7 +62,6 @@ def do_plotting(wavenumber,raw_,facet_mean_spectra,facet_mean_continuum,mindexes
     axis0['ylim']=ylims
     axis[0].set(**axis0)
     axis[1].set(**axis1)
-    fig.tight_layout()
     return fig, axis
 
 
@@ -105,7 +104,8 @@ def extract_fits(myfile):
     
     
 if __name__=="__main__":
-    survey_name="EQ2"
+    survey_name="EQ4"
     model_name="one_gauss"
-    facet_number="F10"
+    ii = sys.argv[1]
+    facet_number="F"+str(ii)
     main(survey_name,model_name,facet_number)

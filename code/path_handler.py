@@ -47,8 +47,8 @@ class PathHandler:
         return self.build_path(self.basepaths["json_getspots"], get_spots_eq[survey_name])
     
     
-    def facet_spectra(self,survey_name,face_number_str):
-        dir=self.build_path(self.basepaths["facet_spectra"],self.shapemodel,survey_name)
+    def facet_spectra(self,survey_name,model_name,face_number_str):
+        dir=self.build_path(self.basepaths["facet_spectra"],self.shapemodel,survey_name,model_name)
         os.makedirs(dir,exist_ok=True)
         return self.build_path(dir,face_number_str+".h5")
 
