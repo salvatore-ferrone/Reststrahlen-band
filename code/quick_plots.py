@@ -98,4 +98,4 @@ def add_plot_fits_one_gauss(fig,axis,fit_array, wavenumber):
 if __name__=="__main__":
     model_name = "one_gauss"
     row_index = int(sys.argv[1])
-    check_fit("EQ6", row_index,model_name)
+    check_fit("EQ4", row_index,model_name)

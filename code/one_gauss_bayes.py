@@ -93,18 +93,20 @@ def main(row_index,survey_name):
     
     ##### DO THE MARKOV CHAIN
     model=build_model(wavenumber,my_spectrum)
+    print("Model built",datetime.datetime.now()-start_time)
     ### DO  TRACE
     with model:
         trace=pymc.sample(chain_length)
     ### Get number of divergences
     num_diverge=np.sum(trace.sample_stats.diverging.to_numpy())
+    print("Trace done",datetime.datetime.now()-start_time)
     
     ### STORE IN DICTIONARY 
     trace_dict=PBF.store_trace_in_dict(sclk,variable_names,trace,chain_length,chain_sample)
     outarray=np.zeros((len(variable_names),chain_sample*n_chains))
     for i in range(len(variable_names)):
         outarray[i,:]=trace_dict[sclk][variable_names[i]]
-        
+    print("Trace stored",datetime.datetime.now()-start_time)
     #### WRITE TO HDF5
     FOS.write_to_hdf5(\
         out_file_name,
@@ -124,6 +126,7 @@ def main(row_index,survey_name):
         path_to_wave_numbers,
         num_diverge,
         model_name)
+    print("Data saved",datetime.datetime.now()-start_time)
         
     
     
