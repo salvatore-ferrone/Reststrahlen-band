@@ -11,7 +11,7 @@ import one_gauss_bayes as OGB #type: ignore
 
 def main(survey_name,ncpu,model_name):
     print("In main")
-    first_facet = 3400
+    first_facet = 0
     
     paths=PathHandler()
     spectra_csv, _ = FOS.open_data(paths.otes_csv(survey_name), paths.wavenumbers)
@@ -21,8 +21,9 @@ def main(survey_name,ncpu,model_name):
     facetstrs=list(getspots.keys())
     print("Opened ",paths.json_getspots(survey_name))
     ### LOOP OVER ALL FACETS ###
-    Nfacets = len(facetstrs)
+    # Nfacets = len(facetstrs)
     # Nfacets = 2*first_facet
+    Nfacets=3400
     start_time = datetime.datetime.now()
     pool=mp.Pool(ncpu)
     print("Starting mp pool with ",ncpu," cpus")
@@ -157,7 +158,7 @@ def write_out(paths,survey_name,model_name,facet_str,facet_mean_spectra,facet_me
 
 
 if __name__=="__main__":
-    survey_name="EQ1"
+    survey_name="EQ6"
     ncpu=20
-    model_name="two_gauss"
+    model_name="one_gauss"
     main(survey_name=survey_name,ncpu=ncpu,model_name=model_name)
