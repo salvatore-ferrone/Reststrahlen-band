@@ -23,14 +23,41 @@ class PathHandler:
         """
         return os.path.join(base_path, *args)
 
-    def otes_csv(self, survey_name):
-        return self.build_path(self.basepaths["OTES_csv"], survey_name+"_data_spectra.csv")
-
-    def bayes_folder(self, survey_name,model_name="two_gauss"):
-        directory=self.build_path(self.basepaths["bayes_fits"], survey_name, model_name)
+    #############################
+    ########## FOLDERS ##########
+    #############################
+    def temp_global_band_depth_ratio(self, high_folder):
+        la_base = self.build_path(self.basepaths["temp"])
+        os.makedirs(la_base, exist_ok=True)
+        outpath = self.build_path(la_base, high_folder)
+        os.makedirs(outpath, exist_ok=True)
+        return outpath
+        
+    def global_distributions(self, high_folder, fname):
+        outpath = self.build_path(self.basepaths["global_distributions"], high_folder)
+        os.makedirs(outpath, exist_ok=True)
+        return self.build_path(outpath, fname)
+    
+    def facet_array_folder(self):
+        directory=self.build_path(self.basepaths["facet_arrays"])
         os.makedirs(directory, exist_ok=True)
         return directory
     
+    def bayes_folder(self, survey_name,model_name="two_gauss"):
+        directory=self.build_path(self.basepaths["bayes_fits"], survey_name, model_name)
+        os.makedirs(directory, exist_ok=True)
+        return directory    
+    ###################################################################
+    ############################## FILES ##############################
+    ###################################################################
+    def otes_csv(self, survey_name):
+        return self.build_path(self.basepaths["OTES_csv"], survey_name+"_data_spectra.csv")
+
+    def band_depths_on_shape_model_fname(self, survey_name, model_name):
+        filename = survey_name + "-" + model_name + "-banddepths.hdf5"
+        filepath = self.build_path(self.basepaths['facet_arrays'], filename)
+        return filepath
+
     def bayes_fits_fname(self, survey_name, row_index,model_name="two_gauss"):
         directory=self.bayes_folder(survey_name,model_name)
         return self.build_path(directory+"/"+survey_name+"_OTES_"+str(row_index).zfill(4)+".h5")
@@ -41,8 +68,7 @@ class PathHandler:
             "EQ2": "OTES_DTS_EQ320am_facet_sclks.json",
             "EQ3": "OTES_DTS_EQ1230pm_facet_sclks.json",
             "EQ4": "OTES_DTS_EQ10am_facet_sclks.json",
-            "EQ6": "OTES_DTS_EQ840pm_facet_sclks.json",
-        }
+            "EQ6": "OTES_DTS_EQ840pm_facet_sclks.json",}
 
         return self.build_path(self.basepaths["json_getspots"], get_spots_eq[survey_name])
     

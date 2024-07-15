@@ -3,5 +3,8 @@
     "bayes_fits": "/scratch2/sferrone/OREX/bayes_fits/",
     "wavenumbers": "/scratch2/sferrone/OREX/OTES/OTES_wnb.csv",
     "json_getspots": "/scratch2/sferrone/OREX/json_getspots",
-    "facet_spectra":"/scratch2/sferrone/OREX/facet_spectra"
+    "facet_spectra":"/scratch2/sferrone/OREX/facet_spectra",
+    "facet_arrays":"/scratch2/sferrone/OREX/facet_arrays",
+    "temp": "/poubelle/sferrone/OREX/temp",
+    "global_distributions": "/scratch2/sferrone/OREX/global_distributions"
 }
