@@ -6,5 +6,6 @@
     "facet_spectra":"/scratch2/sferrone/OREX/facet_spectra",
     "facet_arrays":"/scratch2/sferrone/OREX/facet_arrays",
     "temp": "/poubelle/sferrone/OREX/temp",
-    "global_distributions": "/scratch2/sferrone/OREX/global_distributions"
+    "global_distributions": "/scratch2/sferrone/OREX/global_distributions",
+    "plots": "/scratch2/sferrone/plots/OREX"
 }

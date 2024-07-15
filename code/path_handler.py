@@ -46,7 +46,14 @@ class PathHandler:
     def bayes_folder(self, survey_name,model_name="two_gauss"):
         directory=self.build_path(self.basepaths["bayes_fits"], survey_name, model_name)
         os.makedirs(directory, exist_ok=True)
-        return directory    
+        return directory  
+    
+    def plots(self):
+        directory=self.build_path(self.basepaths["plots"])
+        os.makedirs(directory, exist_ok=True)
+        return directory
+    
+    
     ###################################################################
     ############################## FILES ##############################
     ###################################################################
