@@ -34,7 +34,7 @@ import os
 
 # global variables 
 paths=PathHandler()
-extra_info = "EQ2_divided_by_EQ6"
+extra_info = "EQ6_divided_by_EQ2"
 quantity_names  = ["mu", "sigma", "shape", "scale", "loc", "alpha", "HYDROUS", "ANHYDROUS"]
 n_trials        = 1000
 
@@ -65,6 +65,31 @@ def constrain_guess_gauss_gamma(data):
     mu_bounds,sigma_bounds                  = (numeric_threshold, np.inf), (0, np.inf)
     shape_bounds,scale_bounds,loc_bounds    = (numeric_threshold, np.inf), (numeric_threshold, np.inf), (numeric_threshold, np.inf)
     alpha_bounds                            = (0, 1)
+
+    if not (mu_bounds[0] < mu_init) and (mu_init < mu_bounds[1]):
+        print("mu_init out of bounds")
+        print("mu_init", mu_init)
+        print("mu_bounds", mu_bounds)
+    if not (sigma_bounds[0] < sigma_init) and (sigma_init < sigma_bounds[1]):
+        print("sigma_init out of bounds")
+        print("sigma_init", sigma_init)
+        print("sigma_bounds", sigma_bounds)
+    if not (shape_bounds[0] < shape_init) and (shape_init < shape_bounds[1]):
+        print("shape_init out of bounds")
+        print("shape_init", shape_init)
+        print("shape_bounds", shape_bounds)
+    if not (scale_bounds[0] < scale_init) and (scale_init < scale_bounds[1]):
+        print("scale_init out of bounds")
+        print("scale_init", scale_init)
+        print("scale_bounds", scale_bounds)
+    if not (loc_bounds[0] < loc_init) and (loc_init < loc_bounds[1]):
+        print("loc_init out of bounds")
+        print("loc_init", loc_init)
+        print("loc_bounds", loc_bounds)
+    if not (alpha_bounds[0] < alpha_init) and (alpha_init < alpha_bounds[1]):
+        print("alpha_init out of bounds")
+        print("alpha_init", alpha_init)
+        print("alpha_bounds", alpha_bounds)
     # put them together
     bounds = [mu_bounds, sigma_bounds, shape_bounds, scale_bounds, loc_bounds, alpha_bounds]
     initial_guess = [mu_init, sigma_init, shape_init, scale_init, loc_init, alpha_init]
@@ -129,7 +154,7 @@ def combine_temp_files():
 
 
 def save_global_band_depth_ratio(outarray):
-    filename=paths.global_distributions("EQ2_EQ6", "Band_depth_ratio_gauss_gamma.h5")
+    filename=paths.global_distributions("EQ6_EQ2", "Band_depth_ratio_gauss_gamma.h5")
     with h5py.File(filename, "w") as f:
         f.attrs["description"] = "This file contains the fits to the band depth ratio distributions for EQ2_EQ6"
         f.attrs["date_created"] = str(datetime.datetime.now())
@@ -148,7 +173,7 @@ def main():
     tasks = []
 
     for ii in range(n_trials):   
-        ratio = EQ2[:,ii]/EQ6[:,ii]
+        ratio = EQ6[:,ii]/EQ2[:,ii]
         ratio = ratio[np.isfinite(ratio)]
         tasks.append((ii,ratio))
         
