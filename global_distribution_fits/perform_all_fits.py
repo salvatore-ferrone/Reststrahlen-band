@@ -102,7 +102,7 @@ def model_switcher(survey_name):
         The spectral fits either used one or two gaussian bands, depending on the survey
     """
     models={
-        "EQ1":"one_gauss",
+        "EQ1":"two_gauss",
         "EQ2":"one_gauss",
         "EQ3":"two_gauss",
         "EQ6":"one_gauss"}
@@ -119,23 +119,6 @@ def open_band_depths(survey_name):
         ratios = file['band_depths'][:,:]
     return ratios
 
-def open_EQ2_EQ6_band_depths():
-    """
-        Open the data for EQ2 and EQ6
-    """
-    survey_name="EQ2"
-    model_name=model_switcher(survey_name)
-    inname = ph.band_depths_on_shape_model_fname(survey_name, model_name)
-    with h5py.File(inname, 'r') as file:
-        EQ2 = file['band_depths'][:,:]
-    survey_name="EQ6"
-    model_name=model_switcher(survey_name)
-    inname = ph.band_depths_on_shape_model_fname(survey_name, model_name)
-    with h5py.File(inname, 'r') as file:
-        EQ6 = file['band_depths'][:,:]
-    return EQ2,EQ6
-
-
 
 def main(NCPU,numerator,denominator):
 
@@ -149,23 +132,24 @@ def main(NCPU,numerator,denominator):
     filename = "band_depth_ratio_survival_gauss_gamma_fits.hdf5"
     outfname=ph.global_distributions(foldername,filename)
 
+    print("Fitting {:s} divided by {:s}".format(numerator,denominator))
+    print("will save to ", outfname)
     # Open the data and compute the ratio
     tasks = []
-    EQ2, EQ6 = open_EQ2_EQ6_band_depths()
-    n_trials = EQ2.shape[1]
-    for ii in range(EQ2.shape[1]):   
-        ratio = EQ6[:,ii]/EQ2[:,ii]
+    numerator_data = open_band_depths(numerator)
+    denominator_data = open_band_depths(denominator)
+    n_trials = numerator_data.shape[1]
+    for ii in range(n_trials):   
+        ratio = numerator_data[:,ii]/denominator_data[:,ii]
         ratio = ratio[np.isfinite(ratio)]
         tasks.append((ii,ratio,basepath))
 
-
-
-    
+    print("Fitting {:d} trials".format(n_trials))
     # Run the fitting
     with mp.Pool(NCPU) as pool:
         results = pool.starmap(obtain_quantified, tasks)
 
-
+    print("multiprocessing done")
     ii=0
     fname = basepath + "myfit{:d}.txt".format(ii)
     fit_params = np.loadtxt(fname)
@@ -173,8 +157,7 @@ def main(NCPU,numerator,denominator):
     surface_content_params,model_params  = np.zeros((n_trials, 3)), np.zeros((n_trials, nparams-2))
     
 
-    ## HARD CODE A SMALL NUMBER FOR TESTING 
-    n_trials = 100
+
     for ii in range(n_trials):
         fname = basepath + "myfit{:d}.txt".format(ii)
         fit_parameters = np.loadtxt(fname)
@@ -182,7 +165,6 @@ def main(NCPU,numerator,denominator):
         surface_content_params[ii,:] = fit_parameters[(nparams-3):nparams]
     # change from survival to typical
     surface_content_params[:,0] = 1 - surface_content_params[:,0] 
-
     model_parameter_names = ["mu", "sigma", "shape", "scale", "loc", "alpha"]
     content_names = ["Typical", "Anhydrous", "Hydrated"]
     attrs = {"n_trials":n_trials,
@@ -200,7 +182,7 @@ def main(NCPU,numerator,denominator):
     myfile.attrs.update(attrs)
     myfile.close()    
 
-    print(outfname)
+    print("saved output to", outfname)
     print("Done")
 
 
