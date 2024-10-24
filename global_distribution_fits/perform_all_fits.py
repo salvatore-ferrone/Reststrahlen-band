@@ -188,6 +188,6 @@ def main(NCPU,numerator,denominator):
 
 if __name__=="__main__":
     NCPU = 20
-    numerator = "EQ1"
+    numerator = "EQ3"
     denominator = "EQ2"
     main(NCPU,numerator,denominator)
