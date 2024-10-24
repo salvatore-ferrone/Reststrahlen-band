@@ -1,8 +1,8 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-import corner
 import sys 
 import h5py
+import os
 from scipy import stats
 from scipy import optimize
 sys.path.append("../code/")
@@ -77,12 +77,11 @@ def constrain_guess_gauss_gamma(data):
     
 
 
-def obtain_quantified(i,ratio):
+def obtain_quantified(i,ratio,basepath):
     """
         Fitting the data and writing out the results into a temp file
     """
     try:
-        basepath="/poubelle/sferrone/OREX/temp/EQ6_divided_by_EQ2_october_2024/"
         init_guess, bounds = constrain_guess_gauss_gamma(ratio)
         results = optimize.minimize(log_likelihood_gamma, init_guess, args=(ratio,), bounds=bounds, method='Nelder-Mead')
         mu, sigma, shape, scale, loc, alpha = results.x
@@ -103,9 +102,22 @@ def model_switcher(survey_name):
         The spectral fits either used one or two gaussian bands, depending on the survey
     """
     models={
+        "EQ1":"one_gauss",
         "EQ2":"one_gauss",
+        "EQ3":"two_gauss",
         "EQ6":"one_gauss"}
     return models[survey_name]
+
+
+def open_band_depths(survey_name):
+    """
+        Open the data for EQ2 and EQ6
+    """
+    model_name=model_switcher(survey_name)
+    inname = ph.band_depths_on_shape_model_fname(survey_name, model_name)
+    with h5py.File(inname, 'r') as file:
+        ratios = file['band_depths'][:,:]
+    return ratios
 
 def open_EQ2_EQ6_band_depths():
     """
@@ -125,9 +137,17 @@ def open_EQ2_EQ6_band_depths():
 
 
 
-def main(NCPU):
+def main(NCPU,numerator,denominator):
 
-    basepath="/poubelle/sferrone/OREX/temp/EQ6_divided_by_EQ2_october_2024/"
+    assert numerator in ["EQ6","EQ2","EQ3","EQ1"]
+    assert denominator in ["EQ6","EQ2","EQ3","EQ1"]
+
+    # output name 
+    foldername ="{:s}_divided_by_{:s}".format(numerator,denominator)
+    basepath="/poubelle/sferrone/OREX/temp/"+foldername+"/"
+    os.makedirs(basepath, exist_ok=True)
+    filename = "band_depth_ratio_survival_gauss_gamma_fits.hdf5"
+    outfname=ph.global_distributions(foldername,filename)
 
     # Open the data and compute the ratio
     tasks = []
@@ -136,26 +156,25 @@ def main(NCPU):
     for ii in range(EQ2.shape[1]):   
         ratio = EQ6[:,ii]/EQ2[:,ii]
         ratio = ratio[np.isfinite(ratio)]
-        tasks.append((ii,ratio))
+        tasks.append((ii,ratio,basepath))
 
 
-    # output name 
-    foldername ="EQ6_divided_by_EQ2"
-    filename = "band_depth_ratio_survival_gauss_gamma_fits.hdf5"
-    outfname=ph.global_distributions(foldername,filename)
+
     
     # Run the fitting
     with mp.Pool(NCPU) as pool:
         results = pool.starmap(obtain_quantified, tasks)
 
 
-    basepath="/poubelle/sferrone/OREX/temp/EQ6_divided_by_EQ2_october_2024/"
     ii=0
     fname = basepath + "myfit{:d}.txt".format(ii)
     fit_params = np.loadtxt(fname)
     nparams = len(fit_params)
     surface_content_params,model_params  = np.zeros((n_trials, 3)), np.zeros((n_trials, nparams-2))
     
+
+    ## HARD CODE A SMALL NUMBER FOR TESTING 
+    n_trials = 100
     for ii in range(n_trials):
         fname = basepath + "myfit{:d}.txt".format(ii)
         fit_parameters = np.loadtxt(fname)
@@ -187,4 +206,6 @@ def main(NCPU):
 
 if __name__=="__main__":
     NCPU = 20
-    main(NCPU)
+    numerator = "EQ1"
+    denominator = "EQ2"
+    main(NCPU,numerator,denominator)
