@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=Global_distribution_fit
-#SBATCH --output=/dev/null
+#SBATCH --output=out_%A_%a.out
 #SBATCH --error=job_%A_%a.err
 #SBATCH --time=1339
 #SBATCH --ntasks=1
