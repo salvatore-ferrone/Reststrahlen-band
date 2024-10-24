@@ -24,16 +24,24 @@ def read_hdf5(file_name,n_trials):
     if os.path.isfile(file_name) == False:
         return np.nan*np.zeros(n_trials)
     else:
-        with h5py.File(file_name, 'r') as file:
-            return file['band_depth'][:]
+        try:
+            with h5py.File(file_name, 'r') as file:
+                return file['band_depth'][:]
+        except:
+            print("error reading", file_name)
+            return np.nan*np.zeros(n_trials)
 
 
 
 def model_switcher(survey_name):
+    """
+        The spectral fits either used one or two gaussian bands, depending on the survey
+    """
     models={
+        "EQ1":"two_gauss",
         "EQ2":"one_gauss",
-        "EQ6":"one_gauss"
-    }
+        "EQ3":"two_gauss",
+        "EQ6":"one_gauss"}
     return models[survey_name]
     
     
@@ -88,7 +96,8 @@ def main(survey_name, n_trials = 1000):
         
     # save the output
     write_output(outname, survey_name, banddepths, model_name)
-
+    print("Total Time", datetime.datetime.now()-starttime)
+    print("saved to", outname)
 
 if __name__=="__main__":
     survey_name = sys.argv[1]
