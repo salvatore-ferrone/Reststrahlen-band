@@ -81,7 +81,11 @@ class PathHandler:
     
     
     def facet_spectra(self,survey_name,model_name,face_number_str):
-        dir=self.build_path(self.basepaths["facet_spectra"],self.shapemodel,survey_name,model_name)
-        os.makedirs(dir,exist_ok=True)
-        return self.build_path(dir,face_number_str+".h5")
+        outdir=self.build_path(self.basepaths["facet_spectra"],self.shapemodel,survey_name,model_name)
+        os.makedirs(outdir,exist_ok=True)
+        return self.build_path(outdir,face_number_str+".h5")
+
+    def ancillary_file(self,ancfile="g_06310mm_spc_tes_0000n00000_v020.fits"):
+        outdir = self.build_path(self.basepaths["shape_models"], ancfile)
+        return outdir
 
